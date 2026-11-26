@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { GoogleLogin } from "@react-oauth/google";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { BarChart3, Package, ShieldCheck, ShoppingBag } from "lucide-react";
+import { BarChart3, Eye, EyeOff, Package, ShieldCheck, ShoppingBag } from "lucide-react";
 import Logo from "../components/Logo";
 import { useAuth } from "../hooks/useAuth";
 
@@ -11,10 +10,16 @@ const features = [
   { icon: BarChart3, text: "See sales and store performance at a glance" },
 ];
 
+const inputClass =
+  "mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none";
+
 export default function Login() {
-  const { user, login, keycloakLogin, logout, isAuthenticated } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -24,27 +29,15 @@ export default function Login() {
     return <Navigate to={from} replace />;
   }
 
-  // Signed in to Keycloak, but the account doesn't carry the ADMIN realm role.
-  const keycloakNotAdmin = user?.provider === "keycloak";
-
-  const handleKeycloak = () => {
-    setError("");
-    setLoading(true);
-    keycloakLogin(from).catch(() => {
-      setLoading(false);
-      setError("Couldn't reach the login server. Please try again.");
-    });
-  };
-
-  const handleSuccess = async ({ credential }) => {
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError("");
     setLoading(true);
     try {
-      await login(credential);
+      await login(email.trim(), password);
       navigate(from, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || "Login failed. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
@@ -91,63 +84,70 @@ export default function Login() {
           </div>
 
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Welcome back</h1>
-          <p className="mt-2 text-gray-500">Sign in with your admin Google account to continue.</p>
+          <p className="mt-2 text-gray-500">Sign in with your admin account to continue.</p>
 
-          <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex min-h-11 justify-center">
-              {loading ? (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
-                  Signing in…
-                </div>
-              ) : (
-                <GoogleLogin
-                  onSuccess={handleSuccess}
-                  onError={() => setError("Google sign-in failed. Please try again.")}
-                  size="large"
-                  width="300"
-                  text="signin_with"
-                  shape="pill"
+          <form
+            onSubmit={handleSubmit}
+            className="mt-8 space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+          >
+            <div>
+              <label htmlFor="email" className="text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@example.com"
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className={`${inputClass} pr-10`}
                 />
-              )}
-            </div>
-
-            <div className="my-5 flex items-center gap-3 text-xs text-gray-400">
-              <span className="h-px flex-1 bg-gray-200" />
-              or
-              <span className="h-px flex-1 bg-gray-200" />
-            </div>
-
-            {keycloakNotAdmin ? (
-              <div className="space-y-3 text-center">
-                <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                  You're signed in to Keycloak as <b>{user.email}</b>, but this account doesn't have the ADMIN role.
-                </p>
                 <button
                   type="button"
-                  onClick={logout}
-                  className="w-full rounded-full border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute inset-y-0 right-0 mt-1.5 flex items-center px-3 text-gray-400 hover:text-gray-600"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  Sign out of Keycloak
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={handleKeycloak}
-                disabled={loading}
-                className="w-full rounded-full border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-100 disabled:opacity-60"
-              >
-                Continue with Keycloak
-              </button>
-            )}
+            </div>
 
             {error && (
-              <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-center text-sm text-red-700">
-                {error}
-              </p>
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-sm text-red-700">{error}</p>
             )}
-          </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+            >
+              {loading && (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              )}
+              {loading ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
 
           <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-gray-400">
             <ShieldCheck className="h-4 w-4" />
