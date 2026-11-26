@@ -3,8 +3,11 @@ import axios from "axios";
 export const TOKEN_KEY = "adminToken";
 export const USER_KEY = "adminUser";
 
+// Falls back to the deployed backend when VITE_API_URL isn't set at build time.
+const DEFAULT_API_URL = "https://ecommerce-backend-1hic.onrender.com/api";
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL || DEFAULT_API_URL,
 });
 
 // Attach the admin JWT to every request.
