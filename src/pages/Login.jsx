@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { BarChart3, Eye, EyeOff, Package, ShieldCheck, ShoppingBag } from "lucide-react";
 import Logo from "../components/Logo";
+import { supabase } from "../config/supabase";
 import { useAuth } from "../hooks/useAuth";
 
 const features = [
@@ -13,10 +14,17 @@ const features = [
 const inputClass =
   "mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none";
 
+// "password" = account in our own database, "supabase" = Supabase Auth account.
+const methods = [
+  { id: "password", label: "Password" },
+  { id: "supabase", label: "Supabase" },
+];
+
 export default function Login() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, supabaseLogin, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [method, setMethod] = useState("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -29,17 +37,23 @@ export default function Login() {
     return <Navigate to={from} replace />;
   }
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  // Runs one sign-in attempt; on success go where the user was heading.
+  const attempt = async (signIn) => {
     setError("");
     setLoading(true);
     try {
-      await login(email.trim(), password);
+      await signIn();
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Please try again.");
+      setError(err.response?.data?.message || err.message || "Login failed. Please try again.");
       setLoading(false);
     }
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const signIn = method === "supabase" ? supabaseLogin : login;
+    attempt(() => signIn(email.trim(), password));
   };
 
   return (
@@ -90,6 +104,26 @@ export default function Login() {
             onSubmit={handleSubmit}
             className="mt-8 space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
           >
+            {supabase && (
+              <div className="grid grid-cols-2 gap-1 rounded-full bg-gray-100 p-1 text-sm font-medium">
+                {methods.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => {
+                      setMethod(id);
+                      setError("");
+                    }}
+                    className={`rounded-full px-3 py-1.5 ${
+                      method === id ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div>
               <label htmlFor="email" className="text-sm font-medium text-gray-700">
                 Email
@@ -145,7 +179,7 @@ export default function Login() {
               {loading && (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               )}
-              {loading ? "Signing in…" : "Sign in"}
+              {loading ? "Signing in…" : method === "supabase" ? "Sign in with Supabase" : "Sign in"}
             </button>
           </form>
 
