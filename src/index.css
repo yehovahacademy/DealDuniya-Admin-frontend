@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/*
+ * DealDuniya theme — mirrors the tokens in Ecommerce User/src/index.css so the
+ * admin panel matches the storefront. Change colours here, not in components.
+ */
+@theme {
+  --font-sans: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
+  --font-display: Poppins, "Plus Jakarta Sans", sans-serif;
+
+  /* Accent orange (storefront --ac / --ach / --pb / --mg / --orange) */
+  --color-brand-50: #FFF1E7;
+  --color-brand-100: #FFD8C2;
+  --color-brand-200: #FFC09E;
+  --color-brand-300: #FFA06B;
+  --color-brand-400: #FF8A4C;
+  --color-brand-500: #FF6A1F;
+  --color-brand-600: #C9440C;
+  --color-brand-700: #A8380A;
+  --color-brand-800: #862C08;
+  --color-brand-900: #5E1F06;
+
+  /* Navy (storefront --tx / --navy) */
+  --color-navy-700: #2C2672;
+  --color-navy-800: #1F1A5C;
+  --color-navy-900: #14112E;
+
+  /* Neutrals tinted toward the storefront's navy text + lilac borders */
+  --color-gray-50: #FAF9FC;
+  --color-gray-100: #F4F3FA;
+  --color-gray-200: #EEEAF2;
+  --color-gray-300: #DCD7E6;
+  --color-gray-400: #8E89AD;
+  --color-gray-500: #5A557F;
+  --color-gray-600: #4A4570;
+  --color-gray-700: #3A3566;
+  --color-gray-800: #2A2560;
+  --color-gray-900: #1F1A5C;
+  --color-gray-950: #14112E;
+
+  /* Rounder corners, like the storefront (inputs 14px, cards 26px) */
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.625rem;
+}
+
+body {
+  @apply bg-white font-sans text-gray-900 antialiased;
+}
+
+/* DealDuniya wordmark (copied from the storefront Logo) */
+.brand-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
